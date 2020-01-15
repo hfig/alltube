@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ViewFactory class.
  */
@@ -29,14 +30,17 @@ class ViewFactory
             $request = $container['request'];
         }
 
-        $view = new Smarty(__DIR__.'/../templates/');
+        $view = new Smarty(__DIR__ . '/../templates/');
         if (in_array('https', $request->getHeader('X-Forwarded-Proto'))) {
             $request = $request->withUri($request->getUri()->withScheme('https')->withPort(443));
         }
 
+        $localeManager = $container['locale'];
+
         $smartyPlugins = new SmartyPlugins($container['router'], $request->getUri()->withUserInfo(null));
         $view->registerPlugin('function', 'path_for', [$smartyPlugins, 'pathFor']);
         $view->registerPlugin('function', 'base_url', [$smartyPlugins, 'baseUrl']);
+        $view->registerPlugin('block', 't', [$localeManager, 'smartyTranslate']);
 
         return $view;
     }

@@ -1,71 +1,105 @@
 <?php
 
-require_once __DIR__.'/vendor/autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 use Alltube\Config;
+use Alltube\Controller\DownloadController;
 use Alltube\Controller\FrontController;
+use Alltube\Controller\JsonController;
 use Alltube\LocaleManager;
 use Alltube\LocaleMiddleware;
-use Alltube\PlaylistArchiveStream;
 use Alltube\UglyRouter;
 use Alltube\ViewFactory;
 use Slim\App;
+use Symfony\Component\Debug\Debug;
 
 if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/index.php') !== false) {
-    header('Location: '.str_ireplace('/index.php', '/', $_SERVER['REQUEST_URI']));
+    header('Location: ' . str_ireplace('/index.php', '/', $_SERVER['REQUEST_URI']));
     die;
 }
 
-stream_wrapper_register('playlist', PlaylistArchiveStream::class);
+if (is_file(__DIR__ . '/config/config.yml')) {
+    Config::setFile(__DIR__ . '/config/config.yml');
+}
 
+// Create app.
 $app = new App();
 $container = $app->getContainer();
+
+// Load config.
 $config = Config::getInstance();
 if ($config->uglyUrls) {
     $container['router'] = new UglyRouter();
 }
-$container['view'] = ViewFactory::create($container);
+if ($config->debug) {
+    /*
+     We want to enable this as soon as possible,
+     in order to catch errors that are thrown
+     before the Slim error handler is ready.
+     */
+    Debug::enable();
+}
 
+// Locales.
 if (!class_exists('Locale')) {
     die('You need to install the intl extension for PHP.');
 }
-$container['locale'] = new LocaleManager($_COOKIE);
+$container['locale'] = LocaleManager::getInstance();
 $app->add(new LocaleMiddleware($container));
 
-$controller = new FrontController($container, null, $_COOKIE);
+// Smarty.
+$container['view'] = ViewFactory::create($container);
 
-$container['errorHandler'] = [$controller, 'error'];
+// Controllers.
+$frontController = new FrontController($container);
+$jsonController = new JsonController($container);
+$downloadController = new DownloadController($container);
 
+// Error handling.
+$container['errorHandler'] = [$frontController, 'error'];
+$container['phpErrorHandler'] = [$frontController, 'fatalError'];
+
+// Routes.
 $app->get(
     '/',
-    [$controller, 'index']
+    [$frontController, 'index']
 )->setName('index');
+
 $app->get(
     '/extractors',
-    [$controller, 'extractors']
+    [$frontController, 'extractors']
 )->setName('extractors');
+
 $app->any(
-    '/video',
-    [$controller, 'video']
-)->setName('video');
+    '/info',
+    [$frontController, 'info']
+)->setName('info');
+// Legacy route.
+$app->any('/video', [$frontController, 'info']);
+
 $app->any(
     '/watch',
-    [$controller, 'video']
+    [$frontController, 'info']
 );
-$app->get(
-    '/redirect',
-    [$controller, 'redirect']
-)->setName('redirect');
-$app->get(
-    '/json',
-    [$controller, 'json']
-)->setName('json');
+
+$app->any(
+    '/download',
+    [$downloadController, 'download']
+)->setName('download');
+// Legacy route.
+$app->get('/redirect', [$downloadController, 'download']);
+
 $app->get(
     '/locale/{locale}',
-    [$controller, 'locale']
+    [$frontController, 'locale']
 )->setName('locale');
+
+$app->get(
+    '/json',
+    [$jsonController, 'json']
+)->setName('json');
 
 try {
     $app->run();
 } catch (SmartyException $e) {
-    die('Smarty could not compile the template file: '.$e->getMessage());
+    die('Smarty could not compile the template file: ' . $e->getMessage());
 }

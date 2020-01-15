@@ -1,4 +1,5 @@
 <?php
+
 /**
  * LocaleMiddlewareTest class.
  */
@@ -8,7 +9,6 @@ namespace Alltube\Test;
 use Alltube\Locale;
 use Alltube\LocaleManager;
 use Alltube\LocaleMiddleware;
-use PHPUnit\Framework\TestCase;
 use Slim\Container;
 use Slim\Http\Environment;
 use Slim\Http\Request;
@@ -17,7 +17,7 @@ use Slim\Http\Response;
 /**
  * Unit tests for the FrontController class.
  */
-class LocaleMiddlewareTest extends TestCase
+class LocaleMiddlewareTest extends BaseTest
 {
     /**
      * LocaleMiddleware instance.
@@ -36,10 +36,10 @@ class LocaleMiddlewareTest extends TestCase
     /**
      * Prepare tests.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->container = new Container();
-        $this->container['locale'] = new LocaleManager();
+        $this->container['locale'] = LocaleManager::getInstance();
         $this->middleware = new LocaleMiddleware($this->container);
     }
 
@@ -48,9 +48,10 @@ class LocaleMiddlewareTest extends TestCase
      *
      * @return void
      */
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $this->container['locale']->unsetLocale();
+        LocaleManager::destroyInstance();
     }
 
     /**

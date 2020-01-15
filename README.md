@@ -17,10 +17,9 @@ You just have to unzip it on your server and it should be ready to use.
 ### From Git
 
 In order to get AllTube working,
-you need to use [Yarn](https://yarnpkg.com/) and [Composer](https://getcomposer.org/):
+you need to use [Composer](https://getcomposer.org/):
 
 ```bash
-yarn install
 composer install
 ```
 
@@ -44,11 +43,10 @@ you need to set the `AllowOverride` setting to `All` or `FileInfo`.
 
 #### Update
 
-When updating from Git, you need to run yarn and Composer again:
+When updating from Git, you need to run Composer again:
 
 ```bash
 git pull
-yarn install --prod
 composer install
 ```
 
@@ -66,7 +64,7 @@ cp config/config.example.yml config/config.yml
 
 ## PHP requirements
 
-You will need PHP 5.5 (or higher) and the following PHP modules:
+You will need PHP 7.1 (or higher) and the following PHP modules:
 
 * fileinfo
 * intl
@@ -162,22 +160,18 @@ You can then use it in your PHP code:
 
 ```php
 use Alltube\Config;
-use Alltube\VideoDownload;
+use Alltube\Video;
 
 require_once __DIR__.'/vendor/autoload.php';
 
-$downloader = new VideoDownload(
-    new Config(
-        [
-            'youtubedl' => '/usr/local/bin/youtube-dl',
-        ]
-    )
+Config::setOptions(
+    [
+        'youtubedl' => '/usr/local/bin/youtube-dl',
+    ]
 );
-
-$downloader->getURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+$video = new Video('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+$video->getUrl();
 ```
-
-The library documentation is available on [alltube.surge.sh](https://alltube.surge.sh/classes/Alltube.VideoDownload.html).
 
 You can also have a look at this [example project](https://github.com/Rudloff/alltube-example-project).
 

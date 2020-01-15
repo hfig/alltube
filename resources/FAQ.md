@@ -64,6 +64,7 @@ Then push the code to Heroku and it should work out of the box.
 Some websites generate an unique video URL for each IP address.
 When using AllTube, the URL is generated for our server's IP address
 and your computer is not allowed to use it.
+(This is also known to happen with Vevo YouTube videos.)
 
 There are two known workarounds:
 
@@ -71,14 +72,6 @@ There are two known workarounds:
 * You can enable streaming videos through the server (see below).
   Please note that this can use a lot of resources on the server
   (which is why we won't enable it on alltubedownload.net).
-
-## CSS and JavaScript files are missing
-
-You probably don't have the minified files (in the `dist` folder).
-You need to either:
-
-* Use a [release package](https://github.com/Rudloff/alltube/releases)
-* Run `yarn install` (see detailed instructions in the [README](../README.md#from-git))
 
 ## I get a 404 error on every page except the index
 
@@ -171,3 +164,15 @@ convertAdvancedFormats: [mp3, avi, flv, wav]
 
 This will add new inputs on the download page
 that allow users to converted videos to other formats.
+
+## Use other youtube-dl generic formats (e.g. `bestaudio`)
+
+You can add new formats by using the `genericFormats` option,
+for example:
+
+```yaml
+genericFormats:
+    bestaudio: Best audio
+```
+
+These will be available on every video page.

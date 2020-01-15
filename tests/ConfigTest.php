@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ConfigTest class.
  */
@@ -6,12 +7,12 @@
 namespace Alltube\Test;
 
 use Alltube\Config;
-use PHPUnit\Framework\TestCase;
+use Exception;
 
 /**
  * Unit tests for the Config class.
  */
-class ConfigTest extends TestCase
+class ConfigTest extends BaseTest
 {
     /**
      * Config class instance.
@@ -23,19 +24,11 @@ class ConfigTest extends TestCase
     /**
      * Prepare tests.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
-        $this->config = Config::getInstance('config/config_test.yml');
-    }
+        parent::setUp();
 
-    /**
-     * Destroy variables created by setUp().
-     *
-     * @return void
-     */
-    protected function tearDown()
-    {
-        Config::destroyInstance();
+        $this->config = Config::getInstance();
     }
 
     /**
@@ -45,8 +38,23 @@ class ConfigTest extends TestCase
      */
     public function testGetInstance()
     {
-        $this->assertEquals($this->config->convert, false);
-        $this->assertConfig($this->config);
+        $config = Config::getInstance();
+        $this->assertEquals($config->convert, false);
+        $this->assertConfig($config);
+    }
+
+    /**
+     * Test the getInstance function.
+     *
+     * @return void
+     */
+    public function testGetInstanceFromScratch()
+    {
+        Config::destroyInstance();
+
+        $config = Config::getInstance();
+        $this->assertEquals($config->convert, false);
+        $this->assertConfig($config);
     }
 
     /**
@@ -58,37 +66,83 @@ class ConfigTest extends TestCase
      */
     private function assertConfig(Config $config)
     {
-        $this->assertInternalType('array', $config->params);
-        $this->assertInternalType('string', $config->youtubedl);
-        $this->assertInternalType('string', $config->python);
-        $this->assertInternalType('string', $config->avconv);
-        $this->assertInternalType('bool', $config->convert);
-        $this->assertInternalType('bool', $config->uglyUrls);
-        $this->assertInternalType('bool', $config->stream);
-        $this->assertInternalType('bool', $config->remux);
-        $this->assertInternalType('int', $config->audioBitrate);
+        $this->assertIsArray($config->params);
+        $this->assertIsString($config->youtubedl);
+        $this->assertIsString($config->python);
+        $this->assertIsString($config->avconv);
+        $this->assertIsBool($config->convert);
+        $this->assertIsBool($config->uglyUrls);
+        $this->assertIsBool($config->stream);
+        $this->assertIsBool($config->remux);
+        $this->assertIsInt($config->audioBitrate);
     }
 
     /**
-     * Test the getInstance function with a missing config file.
+     * Test the setFile function.
      *
      * @return void
-     * @expectedException Exception
      */
-    public function testGetInstanceWithMissingFile()
+    public function testSetFile()
     {
-        Config::getInstance('foo');
+        Config::setFile($this->getConfigFile());
+        $this->assertConfig($this->config);
     }
 
     /**
-     * Test the getInstance function with an empty filename.
+     * Test the setFile function with a missing config file.
      *
      * @return void
      */
-    public function testGetInstanceWithEmptyFile()
+    public function testSetFileWithMissingFile()
     {
-        $config = Config::getInstance('');
-        $this->assertConfig($config);
+        $this->expectException(Exception::class);
+        Config::setFile('foo');
+    }
+
+    /**
+     * Test the setOptions function.
+     *
+     * @return void
+     */
+    public function testSetOptions()
+    {
+        Config::setOptions(['appName' => 'foo']);
+        $config = Config::getInstance();
+        $this->assertEquals($config->appName, 'foo');
+    }
+
+    /**
+     * Test the setOptions function.
+     *
+     * @return void
+     */
+    public function testSetOptionsWithoutUpdate()
+    {
+        Config::setOptions(['appName' => 'foo'], false);
+        $config = Config::getInstance();
+        $this->assertEquals($config->appName, 'foo');
+    }
+
+    /**
+     * Test the setOptions function.
+     *
+     * @return void
+     */
+    public function testSetOptionsWithBadYoutubedl()
+    {
+        $this->expectException(Exception::class);
+        Config::setOptions(['youtubedl' => 'foo']);
+    }
+
+    /**
+     * Test the setOptions function.
+     *
+     * @return void
+     */
+    public function testSetOptionsWithBadPython()
+    {
+        $this->expectException(Exception::class);
+        Config::setOptions(['python' => 'foo']);
     }
 
     /**
@@ -100,11 +154,9 @@ class ConfigTest extends TestCase
     {
         Config::destroyInstance();
         putenv('CONVERT=1');
-        putenv('PYTHON=foo');
-        $config = Config::getInstance('config/config_test.yml');
+        Config::setFile($this->getConfigFile());
+        $config = Config::getInstance();
         $this->assertEquals($config->convert, true);
-        $this->assertEquals($config->python, 'foo');
         putenv('CONVERT');
-        putenv('PYTHON');
     }
 }

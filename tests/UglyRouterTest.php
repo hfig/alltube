@@ -1,4 +1,5 @@
 <?php
+
 /**
  * UglyRouterTest class.
  */
@@ -6,14 +7,13 @@
 namespace Alltube\Test;
 
 use Alltube\UglyRouter;
-use PHPUnit\Framework\TestCase;
 use Slim\Http\Environment;
 use Slim\Http\Request;
 
 /**
  * Unit tests for the UglyRouter class.
  */
-class UglyRouterTest extends TestCase
+class UglyRouterTest extends BaseTest
 {
     /**
      * UglyRouter instance.
@@ -25,7 +25,7 @@ class UglyRouterTest extends TestCase
     /**
      * Prepare tests.
      */
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->router = new UglyRouter();
         $this->router->map(['GET'], '/foo', 'print')->setName('foo');
